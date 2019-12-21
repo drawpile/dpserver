@@ -1,0 +1,4 @@
+nginx-config/htpasswd
+dpwebadmin/
+public_html/admin/
+.env

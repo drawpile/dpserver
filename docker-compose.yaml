@@ -1,0 +1,84 @@
+version: '3.3'
+services:
+    drawpile-srv:
+        image: drawpile/drawpile-srv:${DP_VERSION:-2.1}
+        command: 
+            --sessions /home/drawpile/sessions
+            --database /home/drawpile/config.db
+            --web-admin-port 27780
+            --web-admin-access all
+            --templates /var/session-templates
+            --local-host ${DOMAIN}
+            --extauth https://drawpile.net/api/ext-auth/
+            --report-url http://abusereport:8080/
+        restart: always
+        ports:
+            - "27750:27750"
+        volumes:
+            - type: volume
+              source: serverdata
+              target: /home/drawpile
+            - type: bind
+              source: ./session-templates
+              target: /var/session-templates
+              read_only: true
+        networks:
+            - dpserver
+
+    listserver:
+        image: drawpile/listserver
+        restart: always
+        networks:
+            - dpserver
+        environment:
+            LS_INCLUDESERVERS: http://drawpile-srv:27780/api
+            LS_DATABASE: none
+            LS_NAME: ${DOMAIN}
+            LS_REMOTEADDRESSHEADER: X-Real-Ip
+
+    abusereport:
+        image: drawpile/abusereport
+        restart: always
+        networks:
+            - dpserver
+        environment:
+            SERVER_HOST: ${DOMAIN}
+            DISCORD_WEBHOOK: ${DISCORD_WEBHOOK}
+
+    nginx:
+        build:
+            context: ./nginx
+            args:
+                - DOMAIN
+                - EMAIL
+        environment:
+            DOMAIN: ${DOMAIN}
+            EMAIL: ${EMAIL}
+            USE_CERTBOT: ${USE_CERTBOT:-no}
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - type: bind
+              source: ./nginx-config
+              target: /etc/nginx/conf.d
+              read_only: true
+            - type: bind
+              source: ./public_html
+              target: /var/www/public_html
+              read_only: true
+            - type: volume
+              source: certbot
+              target: /etc/certbot
+        networks:
+            - dpserver
+
+volumes:
+    serverdata:
+    certbot:
+
+networks:
+    dpserver:
+        driver: bridge
+

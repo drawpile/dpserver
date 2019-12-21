@@ -1,0 +1,11 @@
+html, body {
+	font-family: sans-serif;
+	background: #fcfcfc;
+	color: #232629;
+
+	margin: 0 20px;
+}
+
+a {
+	color: #3498db;
+}
