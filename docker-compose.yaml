@@ -34,7 +34,7 @@ services:
             LS_INCLUDESERVERS: http://drawpile-srv:27780/api
             LS_DATABASE: none
             LS_NAME: ${DOMAIN}
-            LS_REMOTEADDRESSHEADER: X-Real-Ip
+            LS_PROXYHEADERS: "true"
 
     abusereport:
         image: drawpile/abusereport
