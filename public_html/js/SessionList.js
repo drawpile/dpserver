@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Calle Laakkonen
+// Copyright (c) 2019-2020 Calle Laakkonen
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,14 @@ const VERSION_FLAIR = {
 const el = (name, attrs={}, ...children) => {
 	const element = document.createElement(name);
 
-	Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+	Object.entries(attrs).forEach(([key, value]) => {
+		if(value instanceof Function) {
+			element.addEventListener(key, value);
+		} else {
+			element.setAttribute(key, value);
+		}
+	});
+
 	children.forEach(c => {
 		if(typeof(c) === 'string') {
 			c = document.createTextNode(c);
@@ -42,16 +49,16 @@ const el = (name, attrs={}, ...children) => {
 
 const td = (...children) => el('td', {}, ...children);
 
-const listingTable = () => el('div', {class: 'root'},
+const listingTable = (setSortFunc) => el('div', {class: 'root'},
 	el('table', {},
 		el('thead', {},
 			el('tr', {},
 				el('th'),
-				el('th', {}, "Title"),
-				el('th', {}, "Server"),
-				el('th', {}, "Started by"),
-				el('th', {}, "Users"),
-				el('th', {}, "Uptime"),
+				el('th', {class: 'sortable sorted-desc', 'data-column': 'title', click: setSortFunc}, "Title"),
+				el('th', {class: 'sortable', 'data-column': 'host', click: setSortFunc}, "Server"),
+				el('th', {class: 'sortable', 'data-column': 'owner', click: setSortFunc}, "Started by"),
+				el('th', {class: 'sortable', 'data-column': 'users', click: setSortFunc}, "Users"),
+				el('th', {class: 'sortable', 'data-column': 'started', click: setSortFunc}, "Uptime"),
 			)
 		),
 		el('tbody', {},
@@ -68,7 +75,6 @@ const uptime = (ts, now) => {
 	const hours = Math.floor(uptime / 60);
 	const minutes = Math.floor(uptime - hours * 60);
 	return `${hours}h ${minutes}m`;
-	
 }
 
 const flair = (session) => {
@@ -77,17 +83,20 @@ const flair = (session) => {
 		flair.push('\u26bf');
 	}
 	const version = VERSION_FLAIR[session.protocol] || '???';
-	if(version !== undefined && version != ' ') {
+	if(version !== undefined && version !== ' ') {
 		flair.push(el('span', {class: 'flair'}, version));
 	}
 
 	return flair;
 }
 
-class Dropshop extends HTMLElement {
+class SessionList extends HTMLElement {
 	constructor() {
 		super();
 		this.attachShadow({mode: 'open'});
+		this._sessions = [];
+		this._sortColumn = 'title';
+		this._sortDir = -1;
 	}
 
 	connectedCallback() {
@@ -139,9 +148,22 @@ class Dropshop extends HTMLElement {
 				background: #8c44ad;
 				color: #fcfcfc;
 			}
+			.sortable:hover {
+				text-decoration: underline;
+			}
+			.sorted-desc:before {
+				position: absolute;
+				margin-left: -1em;
+				content: "\u25be "
+			}
+			.sorted-asc:before {
+				position: absolute;
+				margin-left: -1em;
+				content: "\u25b4 "
+			}
 		`);
 
-		this.table = listingTable();
+		this.table = listingTable(this.selectSortColumn.bind(this));
 
 		this.shadowRoot.appendChild(style);
 		this.shadowRoot.appendChild(this.table);
@@ -163,13 +185,38 @@ class Dropshop extends HTMLElement {
 
 	}
 
+	selectSortColumn(e) {
+		const col = e.target;
+		const field = col.getAttribute("data-column");
+		if(field === this._sortColumn) {
+			this._sortDir = -1 * this._sortDir;
+		} else {
+			this._sortColumn = field;
+		}
+		let sib = col.parentNode.firstChild;
+		while(sib !== null) {
+			sib.classList.remove("sorted-desc", "sorted-asc");
+			sib = sib.nextSibling;
+		}
+		col.classList.add(this._sortDir > 0 ? "sorted-asc" : "sorted-desc");
+
+		if(this._sessions.length > 0) {
+			this.updateTable();
+		}
+	}
+
 	setSessions(sessions) {
+		this._sessions = sessions;
+		this.updateTable();
+	}
+
+	updateTable() {
 		const tbody = this.table.querySelector("tbody");
 		tbody.innerHTML = '';
 
 		const now = Date.now();
 
-		if(sessions.length === 0) {
+		if(this._sessions.length === 0) {
 			tbody.append(
 				el('tr', {class: 'empty'},
 					el('td', {colspan: 6}, 'No active sessions at the moment')
@@ -177,6 +224,14 @@ class Dropshop extends HTMLElement {
 			);
 
 		} else {
+			const sessions = [...this._sessions].sort((a,b) => {
+				if(a[this._sortColumn] < b[this._sortColumn]) {
+					return this._sortDir;
+				} else if(a[this._sortColumn] > b[this._sortColumn]) {
+					return -this._sortDir;
+				}
+				return 0;
+			});
 			tbody.append(...sessions.map(s=> el('tr', {class: s.nsfm ? 'nsfw' : ''},
 				td(...flair(s)),
 				td(
@@ -193,6 +248,6 @@ class Dropshop extends HTMLElement {
 	}
 }
 
-customElements.define('drawpile-session-list', Dropshop);
+customElements.define('drawpile-session-list', SessionList);
 
 })();
