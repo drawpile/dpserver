@@ -78,6 +78,10 @@ const listingTable = (setSortFunc, enableNsfm) => el('div', {class: 'root'},
 			el('input', {type: 'checkbox', id: 'filter-closed'}),
 			el('label', {'for': 'filter-closed'}, '🚪 Closed (block new logins)')
 		),
+		el('div', {class: 'filter'},
+			el('input', {type: 'checkbox', id: 'filter-allowweb'}),
+			el('label', {'for': 'filter-allowweb'}, '🌐 Can join via Web browser')
+		),
 		...(enableNsfm ? [
 			el('div', {class: 'filter'},
 				el('input', {type: 'checkbox', id: 'filter-nsfm'}),
@@ -103,8 +107,10 @@ const listingTable = (setSortFunc, enableNsfm) => el('div', {class: 'root'},
 					el('th', {class: 'sortable', 'data-column': 'host', click: setSortFunc}, "Server"),
 					el('th', {class: 'sortable', 'data-column': 'owner', click: setSortFunc}, "Started by"),
 					el('th', {class: 'sortable', 'data-column': 'users', click: setSortFunc}, "Users"),
+					el('th', {class: 'sortable', 'data-column': 'activedrawingusers', click: setSortFunc}, "Active"),
 					el('th', {class: 'sortable', 'data-column': 'started', click: setSortFunc}, "Uptime"),
 					el('th', {class: 'sortable', 'data-column': 'protocol', click: setSortFunc}, "Version"),
+					el('th'),
 				)
 			),
 			el('tbody', {},
@@ -115,6 +121,10 @@ const listingTable = (setSortFunc, enableNsfm) => el('div', {class: 'root'},
 		)
 	)
 );
+
+const activeDrawingUsers = (n) => {
+	return Number.isInteger(n) && n >= 0 ? `${n}` : '';
+};
 
 const uptime = (ts, now) => {
 	const started = Date.parse(ts);
@@ -142,12 +152,31 @@ const flags = (session) => {
 	if(session.nsfm) {
 		opts.push(el('span', {title: 'Not suitable for minors (NSFM)'}, '🔞'));
 	}
+	if(session.allowweb) {
+		opts.push(el('span', {title: 'Can join via Web browser'}, '🌐'));
+	}
 	return opts;
 }
 
 const versionFlair = (session) => {
 	const version = VERSION_FLAIR[session.protocol] || UNKNOWN_VERSION;
 	return el('span', {class: 'flair ' + version.className, title: version.title}, version.text);
+};
+
+const buildInviteLink = (session) => {
+	const host = session.port === 27750 ? session.host : `${session.host}:${session.port}`;
+	const encodedHost = encodeURIComponent(host);
+	const encodedId = encodeURIComponent(session.id);
+	const suffix = session.allowweb ? '?web' : '';
+	return `https://drawpile.net/invites/${encodedHost}/${encodedId}${suffix}`;
+}
+
+const joinButton = (title, href, closed) => {
+	const attributes = {title, href, class: 'btn', target: '_blank'};
+	if(closed) {
+		attributes.disabled = 'true';
+	}
+	return el('a', attributes, 'Join');
 };
 
 const getFilterFromLocalStorage = (localStorageKey, defaultValue) => {
@@ -213,8 +242,42 @@ class SessionList extends HTMLElement {
 			a:hover {
 				text-decoration: underline;
 			}
-			.nsfw a {
-				color: #da4453;
+			.btn {
+				background-color: #3298dc;
+				border-color: transparent;
+				border-radius: 4px;
+				color: #fcfcfc;
+				cursor: pointer;
+				font-size: large;
+				font-weight: bold;
+				padding-bottom: 0.25em;
+				padding-left: 1em;
+				padding-right: 1em;
+				padding-top: 0.25em;
+			}
+			.btn[disabled] {
+				pointer-events: none;
+				opacity: 0.5;
+			}
+			.btn:hover {
+				background-color: #276cda;
+				text-decoration: none;
+			}
+			.btn:active {
+				background-color: #2366d1;
+				text-decoration: none;
+			}
+			.nsfw .column-title a {
+				color: #f14668;
+			}
+			.nsfw .btn {
+				background-color: #f14668;
+			}
+			.nsfw .btn:hover {
+				background-color: #f03a5f;
+			}
+			.nsfw .btn:active {
+				background-color: #ef2e55;
 			}
 			.flair {
 				padding-top: 3px;
@@ -281,6 +344,7 @@ class SessionList extends HTMLElement {
 
 		this.connectFilter('password', true);
 		this.connectFilter('closed', true);
+		this.connectFilter('allowweb', false);
 		this.connectFilter('nsfm', false);
 
 		fetch(url)
@@ -380,24 +444,28 @@ class SessionList extends HTMLElement {
 				.filter(s => {
 					return (this._filters.password || !s.password)
 						&& (this._filters.closed || !s.closed)
+						&& (!this._filters.allowweb || s.allowweb)
 						&& (this._filters.nsfm || !s.nsfm);
 				})
-				.map(s => el('tr', {class: s.nsfm ? 'nsfw' : ''},
-					el('td', {class: 'column-flags'}, ...flags(s)),
-					el(
-						'td',
-						{class: 'column-title'},
-						el('a', {
-							href: `drawpile://${s.host}${s.port != 27750 ? ':' + s.port : ''}/${s.id}`,
-							title: s.title || '(untitled)',
-						}, s.title || '(untitled)')
-					),
-					td(s.host),
-					td(s.owner),
-					td(''+s.users),
-					td(uptime(s.started, now)),
-					el('td', {class: 'column-version'}, versionFlair(s))
-				));
+				.map(s => {
+					const title = s.title || '(untitled)';
+					const href = buildInviteLink(s);
+					return el('tr', {class: s.nsfm ? 'nsfw' : ''},
+						el('td', {class: 'column-flags'}, ...flags(s)),
+						el(
+							'td',
+							{class: 'column-title'},
+							el('a', {href, title, target: "_blank"}, title)
+						),
+						td(s.host),
+						td(s.owner),
+						td(''+s.users),
+						td(activeDrawingUsers(s.activedrawingusers)),
+						td(uptime(s.started, now)),
+						el('td', {class: 'column-version'}, versionFlair(s)),
+						td(joinButton(`Join ${title} at ${s.host}`, href, s.closed))
+					);
+				});
 			if(sessions.length === 0) {
 				tbody.append(
 					el('tr', {class: 'empty'},
