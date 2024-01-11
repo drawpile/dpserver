@@ -45,6 +45,8 @@ const UNKNOWN_VERSION = {
 	title: 'Unknown Version',
 };
 
+const BLOCK_WEB_VERSIONS = ['dp:4.20.1', 'dp:4.21.2', 'dp:4.22.2', 'dp:4.23.0'];
+
 const el = (name, attrs={}, ...children) => {
 	const element = document.createElement(name);
 
@@ -406,6 +408,11 @@ class SessionList extends HTMLElement {
 	}
 
 	setSessions(sessions) {
+		for(const session of sessions) {
+			if(session.allowweb && BLOCK_WEB_VERSIONS.includes(session.protocol)) {
+				session.allowweb = false;
+			}
+		}
 		this._sessions = sessions;
 		this.updateTable();
 	}
