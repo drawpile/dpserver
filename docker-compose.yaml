@@ -1,7 +1,7 @@
 version: '3.3'
 services:
     drawpile-srv:
-        image: drawpile/drawpile-srv:${DP_VERSION:-2.1}
+        image: askmeaboutloom/drawpile-srv:${DP_VERSION:-2.2}
         command: 
             --sessions /home/drawpile/sessions
             --database /home/drawpile/config.db
@@ -26,7 +26,7 @@ services:
             - dpserver
 
     listserver:
-        image: drawpile/listserver
+        image: askmeaboutloom/listserver:${LISTSERVER_VERSION:-1}
         restart: always
         networks:
             - dpserver
@@ -37,7 +37,7 @@ services:
             LS_PROXYHEADERS: "true"
 
     abusereport:
-        image: drawpile/abusereport
+        image: askmeaboutloom/abusereport:${ABUSEREPORT_VERSION:-1}
         restart: always
         networks:
             - dpserver

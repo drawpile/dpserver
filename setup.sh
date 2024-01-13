@@ -1,10 +1,36 @@
 #!/bin/bash
+cd "$(dirname "$0")" || exit 1
 
-# First of all, we need to install the basic dependencies.
-# This is distro specific.
-DISTRO=$(lsb_release -is)
-bash ./setup.$DISTRO.sh || (echo "There is no setup script for $DISTRO :(" ; exit 1)
+echo
+echo 'Checking if prerequisites are installed...'
+echo
 
+error=0
+for cmd in curl dialog docker docker-compose git htpasswd; do
+    if ! command -v "$cmd" >/dev/null 2>/dev/null; then
+        echo "$cmd - NOT FOUND, must be installed" 2>&1
+        error=1
+    fi
+done
+
+if [[ $error -eq 0 ]]; then
+    echo 'All good.'
+    echo
+else
+    echo 1>&2
+    echo "Some of the required programs above are missing." 1>&2
+    distro_script="setup.$(lsb_release -is | tr '[:upper:]' '[:lower:]').sh"
+    if [[ -f "$distro_script" ]]; then
+        echo
+        echo "Attempting to install them using $distro_script..."
+        echo
+        bash "$distro_script" || exit 1
+    else
+        echo "Please install them first and run setup.sh again." 1>&2
+        echo 1>&2
+        exit 1
+    fi
+fi
 
 mkdir -p session-templates
 

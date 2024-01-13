@@ -1,5 +1,4 @@
-Drawpile Community Server All-In-One Package
----------------------------------------------
+# Drawpile Community Server All-In-One Package
 
 This is a all-in-one package for quickly setting up a Drawpile server with
 all the extra features on a fresh new virtual machine.
@@ -7,8 +6,8 @@ all the extra features on a fresh new virtual machine.
 Prerequisites:
 
  * A server (you can rent one from Linode, Digital Ocean, Google Cloud, AWS, Azure, etc.)
- * OS: Currently, only Debian (10) is supported
- * Not strictly necessary, but a good idea: a domain for your server. You will need this if you want to use Let's Encrypt
+ * OS: Debian, Ubuntu and Arch are known to work. Other Linux distributions should work too, but you'll probably have to install the prerequisite packages manually.
+ * Not strictly necessary, but a good idea: a domain for your server. You will need this if you want to use Let's Encrypt.
 
 This package provides:
 
@@ -20,9 +19,9 @@ This package provides:
  * Drawpile server web admin frontend
  * A simple web site with a live session list
 
-To install, first git clone or unpack this repository (e.g. in /root/):
+To install, first git clone this repository (e.g. in root's home directory, you may need to install `git` first):
 
-    git clone ...
+    git clone https://github.com/drawpile/dpserver.git
 
 Next, run the setup script:
 
