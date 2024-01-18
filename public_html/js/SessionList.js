@@ -169,7 +169,14 @@ const buildInviteLink = (session) => {
 	const host = session.port === 27750 ? session.host : `${session.host}:${session.port}`;
 	const encodedHost = encodeURIComponent(host);
 	const encodedId = encodeURIComponent(session.id);
-	const suffix = session.allowweb ? '?web' : '';
+	const params = [];
+	if(session.allowweb)  {
+		params.push('web');
+	}
+	if(session.nsfm) {
+		params.push('nsfm');
+	}
+	const suffix = params.length === 0 ? '' : `?${params.join('&')}`;
 	return `https://drawpile.net/invites/${encodedHost}/${encodedId}${suffix}`;
 }
 
