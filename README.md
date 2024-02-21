@@ -18,6 +18,7 @@ This package provides:
  * Certbot for automatically setting up a HTTPS certificate
  * Drawpile server web admin frontend
  * A simple web site with a live session list
+ * WebSocket support for the web browser version of Drawpile
 
 To install, first git clone this repository (e.g. in root's home directory, you may need to install `git` first):
 
