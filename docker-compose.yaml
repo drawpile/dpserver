@@ -11,6 +11,7 @@ services:
             --local-host ${DOMAIN}
             --extauth https://drawpile.net/api/ext-auth/
             --report-url http://abusereport:8080/
+            --websocket-port 27751
         restart: always
         ports:
             - "27750:27750"
