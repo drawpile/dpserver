@@ -6,12 +6,19 @@ echo 'Checking if prerequisites are installed...'
 echo
 
 error=0
-for cmd in curl dialog docker docker-compose git htpasswd; do
+for cmd in curl dialog docker git htpasswd; do
     if ! command -v "$cmd" >/dev/null 2>/dev/null; then
         echo "$cmd - NOT FOUND, must be installed" 2>&1
         error=1
     fi
 done
+
+if ! ( command -v docker >/dev/null 2>&1 && \
+       docker compose version >/dev/null 2>&1 ) && \
+   ! command -v docker-compose >/dev/null 2>&1; then
+    echo "docker compose - NOT FOUND, must be installed" 2>&1
+    error=1
+fi
 
 if [[ $error -eq 0 ]]; then
     echo 'All good.'
@@ -51,5 +58,5 @@ fi
 
 clear
 echo "Setup complete. Refer to README.md for extra changes you might want to make."
-echo "To start the server, run: docker-compose up -d"
+echo "To start the server, run: ./docker-compose-wrapper up -d"
 

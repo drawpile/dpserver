@@ -87,15 +87,15 @@ Look at `nginx-config/default.conf` for an example. (You can change these port n
 
 When you've configured the server to your liking, you can start it by running:
 
-    docker-compose up -d
+    ./docker-compose-wrapper up -d
 
 To update everything, run:
 
-    docker-compose pull
-    docker-compose up -d
+    ./docker-compose-wrapper pull
+    ./docker-compose-wrapper up -d
 
 To shut everything down, run:
 
-    docker-compose stop
+    ./docker-compose-wrapper stop
 
-
+The docker-compose-wrapper script just sets the current directory and picks between Docker Compose version 2 (`docker compose`) and version 1 (`docker-compose`). You can also run the appropriate version directly, if you know which one you have installed.

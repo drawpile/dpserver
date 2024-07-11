@@ -1,0 +1,15 @@
+#!/bin/bash
+# Docker Compose changed how you invoke it between version 1 (docker-compose,
+# with a dash) and version 2 (docker compose, with a space). Not all distros
+# provide a compatibility shim in this regard, so we have to deal with it.
+cd "$(dirname "$0")" || exit 1
+if docker compose version >/dev/null 2>&1; then
+    exec docker compose "$@"
+elif command -v docker-compose >/dev/null 2>&1; then
+    exec docker-compose "$@"
+else
+    echo 1>&2
+    echo "Found neither Docker Compose version 2 (docker compose)" 1>&2
+    echo "nor version 1 (docker-compose). Install it to continue." 1>&2
+    echo 1>&2
+fi
