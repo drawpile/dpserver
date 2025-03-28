@@ -89,13 +89,32 @@ When you've configured the server to your liking, you can start it by running:
 
     ./docker-compose-wrapper up -d
 
-To update everything, run:
-
-    ./docker-compose-wrapper pull
-    ./docker-compose-wrapper up -d
-
 To shut everything down, run:
 
     ./docker-compose-wrapper stop
 
 The docker-compose-wrapper script just sets the current directory and picks between Docker Compose version 2 (`docker compose`) and version 1 (`docker-compose`). You can also run the appropriate version directly, if you know which one you have installed.
+
+## Updating the server
+
+To update to the latest version, run:
+
+    git pull
+
+to download the latest data from this repository. If you made incompatible changes, you may have to stash them first.
+
+Then shut down the server:
+
+    ./docker-compose-wrapper stop
+
+Update the images:
+
+    ./docker-compose-wrapper pull
+
+Update the web admin interface:
+
+    ./update-webadmin.sh
+
+And start the server again:
+
+    ./docker-compose-wrapper up -d
