@@ -1,7 +1,7 @@
 version: '3.3'
 services:
     drawpile-srv:
-        image: drawpile/drawpile-srv:${DP_VERSION:-2.2}
+        image: drawpile/drawpile-srv:${DP_VERSION:-2.3}
         command: 
             --sessions /home/drawpile/sessions
             --database /home/drawpile/config.db
