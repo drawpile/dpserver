@@ -30,8 +30,8 @@ done
 
 if [[ $EUID -eq 0 ]]; then
     set -x
-    apt update && apt -y install "${packages[@]}"
+    apt update && apt install "${packages[@]}"
 else
     set -x
-    sudo apt update && sudo apt -y install "${packages[@]}"
+    sudo apt update && sudo apt install "${packages[@]}"
 fi
