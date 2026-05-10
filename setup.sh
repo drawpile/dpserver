@@ -6,9 +6,11 @@ echo 'Checking if prerequisites are installed...'
 echo
 
 error=0
+missing_programs=()
 for cmd in curl dialog docker git htpasswd; do
     if ! command -v "$cmd" >/dev/null 2>/dev/null; then
         echo "$cmd - NOT FOUND, must be installed" 2>&1
+        missing_programs+=("$cmd")
         error=1
     fi
 done
@@ -17,6 +19,7 @@ if ! ( command -v docker >/dev/null 2>&1 && \
        docker compose version >/dev/null 2>&1 ) && \
    ! command -v docker-compose >/dev/null 2>&1; then
     echo "docker compose - NOT FOUND, must be installed" 2>&1
+    missing_programs+=('docker-compose')
     error=1
 fi
 
@@ -31,7 +34,7 @@ else
         echo
         echo "Attempting to install them using $distro_script..."
         echo
-        bash "$distro_script" || exit 1
+        bash "$distro_script" "${missing_programs[@]}" || exit 1
     else
         echo "Please install them first and run setup.sh again." 1>&2
         echo 1>&2
