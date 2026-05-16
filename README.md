@@ -118,3 +118,15 @@ Update the web admin interface:
 And start the server again:
 
     ./docker-compose-wrapper up -d
+
+### Beta versions
+
+Beta versions of the server are not automatically updated to. You can specify that you want to use a beta version by setting the `DP_VERSION` environment variable. The easiest way to do this is to create an environment file with the version you want to use. At the time of writing, the latest beta version is 2.3.1-beta.1, so you would do it like this:
+
+```
+echo 'DP_VERSION=2.3.1-beta.1' >.env
+```
+
+Then run the update steps above as usual, it should pull the beta version you specified.
+
+The file starts with a dot, so it will be hidden and won't show up in file managers and file listings by default. You have to enable hidden files or in the terminal use `ls -a` to see it. To go back to the default version, delete the file again by running `rm .env` and run the update steps above again.
